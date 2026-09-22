@@ -145,8 +145,8 @@ func KnownID(id string) bool { return knownIDs[id] }
 // Tunables are the thresholds a user config may override ([thresholds] in
 // .pgbot.toml). Only these keys are wired — everything else stays a compiled-in
 // const (an unknown key in a config is a loud warning, not a silent no-op).
-// Applied BEFORE the finding is produced, so a raised threshold means the
-// finding is never generated at all (B2-2 precedence rule 1).
+// Applied BEFORE the finding is produced (B2-2 precedence rule 1). Raising a
+// warning threshold does not override a separate compiled-in critical threshold.
 type Tunables struct {
 	UnusedIndexMinBytes int64   // unused_index_min_size_mb × 1MiB
 	DeadRatioWarn       float64 // dead_ratio_warn
@@ -1433,7 +1433,9 @@ func failoverReadiness(c *model.Context, add func(model.Finding), tun Tunables) 
 		var ev []string
 		worst, crit := 0.0, false
 		for _, r := range c.Replication.Replicas {
-			if r.ReplayLagSec == nil || *r.ReplayLagSec < tun.ReplicaLagWarnSec {
+			// The configurable warning gate must not suppress the fixed critical
+			// boundary when a user raises it above replicaLagCritSec.
+			if r.ReplayLagSec == nil || (*r.ReplayLagSec < tun.ReplicaLagWarnSec && *r.ReplayLagSec < replicaLagCritSec) {
 				continue
 			}
 			if *r.ReplayLagSec > worst {
