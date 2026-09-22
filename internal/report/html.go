@@ -91,6 +91,19 @@ func Render(c *model.Context, score int, version string) string {
 			if f.Remediation != "" {
 				body.w(`<p class="fix">Fix: %s</p>`, esc(f.Remediation))
 			}
+			if f.Safety != nil {
+				for _, guard := range f.Safety.BlockingCaveats {
+					label := "Caution before"
+					if guard.Kind == model.GuardProhibition {
+						label = "Do not run"
+					}
+					body.w(`<p class="guard"><b>%s %s:</b> %s`, label, esc(guard.Action), esc(guard.Text))
+					if guard.Verify != nil {
+						body.w(` <b>Only after:</b> %s`, esc(*guard.Verify))
+					}
+					body.raw(`</p>`)
+				}
+			}
 			for _, cv := range f.Caveats {
 				body.w(`<p class="caveat">but: %s</p>`, esc(cv))
 			}
@@ -253,7 +266,7 @@ func Render(c *model.Context, score int, version string) string {
   .finding.info .sev{color:var(--muted)} .finding.suppressed{opacity:.55}
   .fbody p{margin:.3rem 0;color:var(--muted)} .fbody b{color:var(--fg)}
   .evi{color:var(--muted);font-size:.82rem;padding-left:.8rem}
-  .fix{color:var(--green)} .caveat{color:var(--orange);font-size:.82rem}
+  .fix{color:var(--green)} .guard,.caveat{color:var(--orange);font-size:.82rem}
   footer{padding:1rem 2rem;color:var(--dim);border-top:1px solid var(--line);font-size:.8rem}
 </style></head><body>
 <header><span class="score">` + fmt.Sprintf("%d", score) + `<span style="font-size:.9rem;color:var(--dim)">/100</span></span>
