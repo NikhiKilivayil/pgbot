@@ -12,7 +12,7 @@ require (
 	github.com/owenrumney/go-sarif/v2 v2.3.3
 	github.com/pgrundev/pggo v0.1.1
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.59.0
 	golang.org/x/sync v0.25.0
 	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0
